@@ -48,6 +48,12 @@ spec:
       {{- if and (.Values.server.service.activeNodePort) (eq (.Values.server.service.type | toString) "NodePort") }}
       nodePort: {{ .Values.server.service.activeNodePort }}
       {{- end }}
+    - name: {{ include "vault.scheme" . }}-default
+      port: 8200
+      targetPort: {{ .Values.server.service.targetPort }}
+      {{- if and (.Values.server.service.activeNodePort) (eq (.Values.server.service.type | toString) "NodePort") }}
+      nodePort: {{ .Values.server.service.activeNodePort }}
+      {{- end }}
     - name: https-internal
       port: 8201
       targetPort: 8201

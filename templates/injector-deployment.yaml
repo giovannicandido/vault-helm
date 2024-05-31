@@ -63,6 +63,8 @@ spec:
               value: "{{ .Values.global.externalVaultAddr }}"
             {{- else if .Values.injector.externalVaultAddr }}
               value: "{{ .Values.injector.externalVaultAddr }}"
+            {{- else if .Values.injector.overrideVaultAddr }}
+              value: "{{ .Values.injector.overrideVaultAddr }}"
             {{- else }}
               value: {{ include "vault.scheme" . }}://{{ template "vault.fullname" . }}.{{ include "vault.namespace" . }}.svc:{{ .Values.server.service.port }}
             {{- end }}

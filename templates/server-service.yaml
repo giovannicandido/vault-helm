@@ -55,5 +55,53 @@ spec:
     app.kubernetes.io/instance: {{ .Release.Name }}
     {{- end }}
     component: server
+{{- if .Values.server.service.createServicePerPod}}
+---
+{{ $chart := include "vault.chart" . }}
+{{ $vaultName := include "vault.name" . }}
+{{ $vaultScheme := include "vault.scheme" . }}
+{{ $namespace :=  include "vault.namespace" . }}
+{{ $releaseName :=  .Release.Name }}
+{{ $releaseService :=  .Release.Service }}
+{{ $values :=  .Values }}
+
+# Service per pod
+{{ range $i, $e := until (.Values.server.ha.replicas | int) }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $vaultName }}-{{ $i }}
+  namespace: {{ $namespace }}
+  labels:
+    helm.sh/chart: {{ $chart }}
+    app.kubernetes.io/name: {{ $vaultName }}
+    app.kubernetes.io/instance: {{ $releaseName }}
+    app.kubernetes.io/managed-by: {{ $releaseService }}
+  {{- if $values.server.service.servicePerPodExternalDnsAnnotationsDomain }}
+  annotations:
+    external-dns.alpha.kubernetes.io/internal-hostname: {{ $vaultName }}-{{ $i }}-pod-ns-{{ $namespace }}.{{ $values.server.service.servicePerPodExternalDnsAnnotationsDomain }}
+  {{- end }}
+spec:
+  selector:
+    app.kubernetes.io/name: {{ $vaultName }}
+    {{- if eq ($values.server.service.instanceSelector.enabled | toString) "true" }}
+    app.kubernetes.io/instance: {{ $releaseName }}
+    {{- end }}
+    statefulset.kubernetes.io/pod-name: {{ printf "%s-%d" $releaseName $i }}
+    component: server
+  ports:
+    - name: {{ $vaultScheme }}
+      port: 8200
+      targetPort: {{ $values.server.service.targetPort }}
+      {{- if and ($values.server.service.nodePort) (eq ($values.server.service.type | toString) "NodePort") }}
+      nodePort: {{ $values.server.service.nodePort }}
+      {{- end }}
+    - name: https-internal
+      port: 8201
+      targetPort: 8201
+{{ end }}
+{{- end}}
 {{- end }}
 {{- end }}
+

@@ -64,6 +64,7 @@ injector:
 
   # Deprecated: Please use global.externalVaultAddr instead.
   externalVaultAddr: ""
+  overrideVaultAddr: ""
 
   # image sets the repo and tag of the vault-k8s image to use for the injector.
   image:
@@ -678,6 +679,12 @@ server:
   # Enables a headless service to be used by the Vault Statefulset
   service:
     enabled: true
+    # If true it will create a service per pod instance, this assumes its in in HA mode
+    createServicePerPod: false
+    # If not empty it will annotate all services per pod created with a dinamicall annotation
+    # Ths allows external dns to create a stable DNS entry for the pod, it can be used for a custom valid Wildcard Certificate
+    # external-dns.alpha.kubernetes.io/internal-hostname: {{vault-server-pod-name}}-pod-ns-{{namespace}}.{{servicePerPodExternalDnsAnnotationsDomain}}
+    servicePerPodExternalDnsAnnotationsDomain: ""
     # Enable or disable the vault-active service, which selects Vault pods that
     # have labeled themselves as the cluster leader with `vault-active: "true"`.
     active:
